@@ -25,8 +25,10 @@ Este repositório contém a "receita" para o build automatizado da minha imagem 
 
 ## ⚙️ Como Atualizar o Sistema
 
-A imagem é reconstruída todos os dias às 04h00 da manhã horário de Brasília. Aqui costumo acordar as 07/08 da manhã, então já tenho um 
-update para aplicar logo pela manhã. Configurei ainda no Github Actions o boot do telegram @Botfather, que me avisa pelo Telegram se o build da imagem ocorreu com sucesso ou falha. 
+A imagem é reconstruída diariamente às **04h00** (horário de Brasília). Como costumo acordar entre **07h00 e 08h00**, já encontro uma atualização pronta para aplicar logo pela manhã.
+
+Além disso, configurei no GitHub Actions a integração com o bot do Telegram **@Botfather**, que me notifica automaticamente pelo Telegram sempre que o build da imagem é concluído com sucesso ou apresenta alguma falha.
+
 
 1. Abra o terminal.
 2. Verifique se há atualizações:
