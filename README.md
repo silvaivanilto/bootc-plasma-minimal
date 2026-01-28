@@ -29,7 +29,7 @@ A imagem é reconstruída diariamente às **04h00** (horário de Brasília). Com
 
 Além disso, configurei no GitHub Actions a integração com o bot do Telegram **@Botfather**, que me notifica automaticamente pelo Telegram sempre que o build da imagem é concluído com sucesso ou apresenta alguma falha.
 
-
+#### Atualização manual 
 1. Abra o terminal.
 2. Verifique se há atualizações:
 ``` 
