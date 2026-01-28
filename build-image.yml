@@ -57,3 +57,24 @@ jobs:
           # Otimização de cache para builds rápidos
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+- name: Notificar Sucesso no Telegram
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ Imagem Bootc atualizada com sucesso!
+            O sistema já está pronto para o upgrade.
+            Build: ${{ github.sha }}
+
+      - name: Notificar Falha no Telegram
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ Erro no Build das 04:00!
+            Verifique os logs no GitHub: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
