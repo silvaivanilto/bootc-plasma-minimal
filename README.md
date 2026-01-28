@@ -25,7 +25,7 @@ Este repositório contém a "receita" para o build automatizado da minha imagem 
 
 ## ⚙️ Como Atualizar o Sistema
 
-A imagem é reconstruída todos os dias às 04h00 da manhão horário de Brasília. Aqui costuma acordar as 07/08 da manhã, então já tenho um 
+A imagem é reconstruída todos os dias às 04h00 da manhã horário de Brasília. Aqui costumo acordar as 07/08 da manhã, então já tenho um 
 update para aplicar logo pela manhã.
 
 1. Abra o terminal.
