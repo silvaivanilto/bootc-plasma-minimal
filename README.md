@@ -28,6 +28,7 @@ Este repositório contém a "receita" para o build automatizado da minha imagem 
 A imagem é reconstruída diariamente às **04h00** (horário de Brasília). Como costumo acordar entre **07h00 e 08h00**, já encontro uma atualização pronta para aplicar logo pela manhã.
 
 Além disso, configurei no GitHub Actions a integração com o bot do Telegram **@Botfather**, que me notifica automaticamente pelo Telegram sempre que o build da imagem é concluído com sucesso ou apresenta alguma falha.
+
 ![Imagem](https://i.imgur.com/5Ip7A1N.png)
 
 #### Atualização manual 
