@@ -2,15 +2,15 @@ name: Build e Push da Imagem Bootc
 
 on:
   schedule:
-    # 08:00 UTC representa 05:00 da manhã no horário de Brasília (UTC-3)
-    # Definido para as 08:05 para evitar congestionamento no GitHub
+    # 08:00 UTC = 05:00 BRT (Horário de Brasília)
+    # Rodando às 08:05 para evitar congestionamento nos servidores do GitHub
     - cron: '5 8 * * *'
   push:
     branches:
       - main
     paths-ignore:
       - 'README.md'
-  workflow_dispatch:
+  workflow_dispatch: # Permite rodar manualmente para testar agora
 
 env:
   REGISTRY: ghcr.io
@@ -47,16 +47,16 @@ jobs:
             type=sha,format=short
             latest
 
-      - name: Build e Push da Imagem
+      - name: Build e Push da Imagem (Rebuild Completo)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Containerfile
           push: true
+          pull: true       # Busca atualizações da imagem base (ex: Fedora/CentOS)
+          no-cache: true   # Força o rebuild de todas as camadas, incluindo pacotes
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Notificar Sucesso no Telegram
         if: success()
@@ -64,18 +64,4 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ✅ Imagem Bootc atualizada com sucesso!
-            Horário: 05:00 BRT
-            Build: ${{ github.sha }}
-
-      - name: Notificar Falha no Telegram
-        if: failure()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ❌ Erro no Build das 05:00!
-            Verifique os logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
+          
