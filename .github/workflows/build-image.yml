@@ -3,14 +3,13 @@ name: Build e Push da Imagem Bootc
 on:
   schedule:
     # 08:00 UTC = 05:00 BRT (Horário de Brasília)
-    # Rodando às 08:05 para evitar congestionamento nos servidores do GitHub
     - cron: '30 15 * * *'
   push:
     branches:
       - main
     paths-ignore:
       - 'README.md'
-  workflow_dispatch: # Permite rodar manualmente para testar agora
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -37,12 +36,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Gerar Timestamp
+        id: timestamp
+        run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+
       - name: Extrair metadados
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=${{ steps.timestamp.outputs.date }}
             type=ref,event=branch
             type=sha,format=short
             latest
@@ -53,8 +57,8 @@ jobs:
           context: .
           file: ./Containerfile
           push: true
-          pull: true       # Busca atualizações da imagem base (ex: Fedora/CentOS)
-          no-cache: true   # Força o rebuild de todas as camadas, incluindo pacotes
+          pull: true
+          no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -66,7 +70,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             ✅ Rebuild Completo Bootc concluído!
-            A imagem foi gerada do zero com pacotes atualizados.
+            Tag: ${{ steps.timestamp.outputs.date }}
             Build: ${{ github.sha }}
 
       - name: Notificar Falha no Telegram
@@ -77,4 +81,4 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             ❌ Erro no Rebuild Agendado!
-            Verifique o que falhou: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
