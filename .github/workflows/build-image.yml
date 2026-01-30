@@ -2,7 +2,7 @@ name: Build e Push da Imagem Bootc
 
 on:
   schedule:
-     # 03:45 BRT (Horário de Brasília)
+    # Dispara as 03h45 diarimante (horário de Brasília)
     - cron: '45 6 * * *'
   push:
     branches:
@@ -36,9 +36,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Gerar Timestamp
+      - name: Gerar Timestamp (Horário de Brasília)
         id: timestamp
-        run: echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+        run: echo "date=$(TZ='America/Sao_Paulo' date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
 
       - name: Extrair metadados
         id: meta
@@ -70,8 +70,9 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             ✅ Rebuild Completo Bootc concluído!
-            Tag: ${{ steps.timestamp.outputs.date }}
-            Build: ${{ github.sha }}
+            Tag Gerada: ${{ steps.timestamp.outputs.date }}
+            Branch/Tag: ${{ github.ref_name }}
+            Repositório: ${{ github.repository }}
 
       - name: Notificar Falha no Telegram
         if: failure()
@@ -81,4 +82,5 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             ❌ Erro no Rebuild Agendado!
+            Branch/Tag: ${{ github.ref_name }}
             Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
