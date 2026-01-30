@@ -32,7 +32,8 @@ papirus-icon-theme
 tuned
 tuned-ppd
 fastfetch
-zram spice-vdagent
+zram
+spice-vdagent
 libnma
 ibus-typing-booster
 fpaste
