@@ -30,8 +30,11 @@ mv post-install.service /etc/systemd/system/post-install.service
 echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
 dnf5 -y upgrade --refresh -x 'kernel*' -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
 
-echo "Instala o kernel-modules-extra para um melhor suporte a hardware"
-dnf5 -y install kernel-modules-extra-"$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
+cho "Identifica a versão do kernel instalada no container, para kernel modules extra e nvidia"
+KERNEL_VERSION=$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')
+
+echo "Instala o kernel-modules-extra para um melhor suporte a hardware e kernel-devel para Nvidia"
+dnf5 -y install kernel-modules-extra-"$KERNEL_VERSION" kernel-devel-"$KERNEL_VERSION"
 
 echo "wget necessário para baixar repositórios"
 dnf5 -y install wget
@@ -41,10 +44,7 @@ wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
 https://negativo17.org/repos/fedora-nvidia-580.repo
 
 echo "Install nvidia driver and akmoda"
-dnf5 install -y nvidia-driver nvidia-driver-cuda kernel-devel --refresh
-
-echo "Identifica a versão do kernel instalada no container"
-KERNEL_VERSION=$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')
+dnf5 install -y nvidia-driver nvidia-driver-cuda --refresh
 
 echo "Build nvidia kernel module para o kernel: $KERNEL_VERSION"
 akmods --force --kernels "$KERNEL_VERSION"
