@@ -30,14 +30,11 @@ mv post-install.service /etc/systemd/system/post-install.service
 echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
 dnf5 -y upgrade --refresh -x 'kernel*' -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
 
-echo "Instala o kernel-devel necessário para kernel-modules-extra e para NVidia"
-dnf5 -y install kernel-devel
+echo "Identifica a versão do kernel instalada no container, para instalar o kerne-modules-extra e kernel-devel para Nvidia"
+KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
 
-echo "Identifica a versão do kernel instalada no container, para kernel modules extra e nvidia"
-KERNEL_VERSION=$(rpm -q kernel-devel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')
-
-echo "Instala o kernel-modules-extra para um melhor suporte a hardware"
-dnf5 -y install kernel-modules-extra-"$KERNEL_VERSION"
+echo "Instala o kernel-modules-extra para um melhor suporte a hardware e kernel-devel para Nvidia"
+dnf5 -y install kernel-modules-extra-"$KERNEL_VERSION" kernel-devel-"$KERNEL_VERSION"
 
 echo "wget necessário para baixar repositórios"
 dnf5 -y install wget
