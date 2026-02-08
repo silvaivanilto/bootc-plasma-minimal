@@ -66,15 +66,11 @@ systemctl enable zram-swap.service
 systemctl enable libvirtd.service
 systemctl enable spice-vdagentd.service
 
-echo "Limpeza de resíduos de contrução" 
+echo "Limpeza de resíduos de construção" 
 dnf5 clean all
 rm -rfv /var/log/*
 rm -rfv /var/cache/*
-rm -rfv /var/lib/dnf/
-rm -rfv /var/lib/AccountsService/
-rm -rfv /var/lib/alsa/
-rm -rfv /var/lib/color/
-rm -rfv /var/lib/dhclient 
+rm -rfv /var/lib/*
 rm -rfv /var/roothome/.cache/*
 rm -rfv /var/usrlocal/share/applications/mimeinfo.cache 
 EOF
