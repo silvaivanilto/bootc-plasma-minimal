@@ -68,11 +68,6 @@ systemctl enable spice-vdagentd.service
 
 echo "Limpeza de resíduos de construção" 
 dnf5 clean all
-rm -rfv /var/log/*
-rm -rfv /var/cache/*
-rm -rfv /var/lib/*
-rm -rfv /var/roothome/*
-rm -rfv /var/usrlocal/share/applications/mimeinfo.cache 
 EOF
 
 # Verificar por erros na imagem 
