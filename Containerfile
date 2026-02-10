@@ -43,8 +43,9 @@ wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
 https://negativo17.org/repos/fedora-nvidia-580.repo
 
 echo "instalar o pacote do nvidia-kmod-common necessário para o kmod-nvidia"
-dnf5 download nvidia-kmod-common
+dnf5 download nvidia-kmod-common nvidia-driver-cuda
 rpm -vi --nodeps nvidia-kmod-common*.rpm
+rpm -vi --nodeps nvidia-driver-cuda*.rpm
 
 echo "instalar o kmod-nvidia previamente construído na imagem anterior"
 dnf5 -y install ./kmod-nvidia-*.rpm
