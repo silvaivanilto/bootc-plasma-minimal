@@ -1,4 +1,32 @@
+# Estágio de build do módulo da nvidia numa imagem separada
+# Para evitar poluir a imagem final com os pacotes de desenvolvimento do kernel e ferramentas de construção
+FROM quay.io/fedora/fedora-bootc:43 AS builder
+
+RUN <<ELL
+echo "Identifica a versão do kernel instalada no container, para instalar kernel-devel para Nvidia"
+KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
+
+dnf5 -y install kernel-devel-"$KERNEL_VERSION"
+
+echo "wget necessário para baixar repositórios"
+dnf5 -y install wget
+
+echo "Configura repositório negativo17 para drivers nvidia"
+wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
+https://negativo17.org/repos/fedora-nvidia-580.repo
+
+echo "Install nvidia driver and akmoda"
+dnf5 install -y nvidia-driver nvidia-driver-cuda --refresh
+
+echo "Build nvidia kernel module para o kernel: $KERNEL_VERSION"
+akmods --force --kernels "$KERNEL_VERSION"
+ELL
+
+# Imagem final do container
 FROM quay.io/fedora/fedora-bootc:43
+
+# Copia o módulo da nvidia construído no estágio anterior
+COPY --from=builder /var/cache/akmods/nvidia/kmod-nvidia*.rpm ./
 
 # Cria os diretórios necessários
 RUN mkdir -p /var/roothome /data /var/home
@@ -7,6 +35,16 @@ RUN mkdir -p /var/roothome /data /var/home
 COPY 10-nvidia-args.toml locale.conf post-install.sh pacotes_rpm post-install.service vconsole.conf ./
 
 RUN <<EOF
+echo "wget necessário para baixar repositórios"
+dnf5 -y install wget
+
+echo "Configura repositório negativo17 para libs da nvidia necessárias"
+wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
+https://negativo17.org/repos/fedora-nvidia-580.repo
+
+echo "instalar o pacote do driver já previamente construído no estágio de build"
+rpm -vi --nodeps kmod-nvidia-*.rpm
+
 echo "Para /opt gravavel"
 rm -rf /opt && mkdir -p /var/opt && ln -s /var/opt /opt
 
@@ -30,24 +68,11 @@ mv post-install.service /etc/systemd/system/post-install.service
 echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
 dnf5 -y upgrade --refresh -x 'kernel*' -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
 
-echo "Identifica a versão do kernel instalada no container, para instalar o kerne-modules-extra e kernel-devel para Nvidia"
+echo "Identifica a versão do kernel instalada no container, para instalar kernel-modules-extra"
 KERNEL_VERSION="$(rpm -q kernel-core --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
 
-echo "Instala o kernel-modules-extra para um melhor suporte a hardware e kernel-devel para Nvidia"
-dnf5 -y install kernel-modules-extra-"$KERNEL_VERSION" kernel-devel-"$KERNEL_VERSION"
-
-echo "wget necessário para baixar repositórios"
-dnf5 -y install wget
-
-echo "Configura repositório negativo17 para drivers nvidia"
-wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
-https://negativo17.org/repos/fedora-nvidia-580.repo
-
-echo "Install nvidia driver and akmoda"
-dnf5 install -y nvidia-driver nvidia-driver-cuda --refresh
-
-echo "Build nvidia kernel module para o kernel: $KERNEL_VERSION"
-akmods --force --kernels "$KERNEL_VERSION"
+echo "Instala o kernel-modules-extra para um melhor suporte a hardware"
+dnf5 -y install kernel-modules-extra-"$KERNEL_VERSION" 
 
 echo "Install gnome shell minimal"
 dnf5 install gnome-shell --setopt=install_weak_deps=False -y
