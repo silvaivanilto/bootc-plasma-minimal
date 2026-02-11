@@ -30,7 +30,7 @@ FROM quay.io/fedora/fedora-bootc:43
 COPY --from=builder /var/cache/akmods/nvidia/kmod-nvidia*.rpm ./
 
 # Cria os diretórios necessários
-RUN mkdir -p /var/roothome /data /var/home
+RUN mkdir -vp /var/roothome /data /var/home
 
 # Copia os arquivos necessários para o container
 COPY 10-nvidia-args.toml locale.conf post-install.sh pacotes_rpm post-install.service vconsole.conf ./
@@ -52,26 +52,30 @@ echo "instalar o kmod-nvidia previamente construído na imagem anterior"
 dnf5 -y install ./kmod-nvidia-*.rpm
 
 echo "Para /opt gravavel"
-rm -rf /opt && mkdir -p /var/opt && ln -s /var/opt /opt
+rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt
 
 echo "Para /usr/local gravavel"
-mkdir -p /var/usrlocal && mv /usr/local/* /var/usrlocal/ 2>/dev/null
-rm -rf /usr/local && ln -s /var/usrlocal /usr/local
+mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null
+rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
 
 echo "Configura o TTY para o layout de teclado BR, bem como o sistema de locale PT-BR"
-mv vconsole.conf /etc/vconsole.conf
-mv locale.conf /etc/locale.conf
+echo "Sempre copie para /usr/etc evite usar /etc veja: https://bit.ly/4tBoFx4"
+mv -v vconsole.conf /usr/etc/vconsole.conf
+mv -v locale.conf /usr/etc/locale.conf
 
-echo "Configura os argumento do kernel nvidia"
-mv 10-nvidia-args.toml /usr/lib/bootc/kargs.d/10-nvidia-args.toml
+echo "Configura os argumento do kernel para nvidia"
+echo "veja a doc https://bit.ly/4qA7J73"
+mv -v 10-nvidia-args.toml /usr/lib/bootc/kargs.d/10-nvidia-args.toml
 
 echo "Move o script de pós instalação"
-mv post-install.sh /usr/bin/post-install.sh
+mv -v post-install.sh /usr/bin/post-install.sh
 
 echo "Move o serviço de pós instalação"
-mv post-install.service /etc/systemd/system/post-install.service
+echo "Prefira /usr sempre a etc veja: https://bit.ly/4tBoFx4"
+mv -v post-install.service /usr/lib/systemd/system/post-install.service
 
 echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
+echo "Veja a doc https://bit.ly/4aPjNvJ"
 dnf5 -y upgrade --refresh -x 'kernel*' -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
 
 echo "Identifica a versão do kernel instalada no container, para instalar kernel-modules-extra"
@@ -98,7 +102,7 @@ systemctl enable libvirtd.service
 systemctl enable spice-vdagentd.service
 
 echo "Limpeza de resíduos de construção" 
-rm -rf kmod* nvidia* pacotes_rpm 
+rm -rvf kmod* nvidia* pacotes_rpm 
 dnf5 clean all
 EOF
 
