@@ -23,7 +23,7 @@ part btrfs.01 --fstype=btrfs --grow
 # Volume Btrfs
 btrfs none --label=fedora btrfs.01
 
-# Subvolumes exatamente como o Silverblue
+# Subvolumes
 btrfs /     --subvol --name=root LABEL=fedora
 btrfs /var  --subvol --name=var  LABEL=fedora
 btrfs /home --subvol --name=home LABEL=fedora
