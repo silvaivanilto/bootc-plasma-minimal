@@ -59,9 +59,8 @@ mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null
 rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
 
 echo "Configura o TTY para o layout de teclado BR, bem como o sistema de locale PT-BR"
-echo "Sempre copie para /usr/etc evite usar /etc veja: https://bit.ly/4tBoFx4"
-mv -v vconsole.conf /usr/etc/vconsole.conf
-mv -v locale.conf /usr/etc/locale.conf
+mv -v vconsole.conf /etc/vconsole.conf
+mv -v locale.conf /etc/locale.conf
 
 echo "Configura os argumento do kernel para nvidia"
 echo "veja a doc https://bit.ly/4qA7J73"
@@ -71,7 +70,7 @@ echo "Move o script de pós instalação"
 mv -v post-install.sh /usr/bin/post-install.sh
 
 echo "Move o serviço de pós instalação"
-echo "Prefira /usr sempre a etc veja: https://bit.ly/4tBoFx4"
+echo "Prefira /usr sempre que possível a etc veja: https://bit.ly/4tBoFx4"
 mv -v post-install.service /usr/lib/systemd/system/post-install.service
 
 echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
