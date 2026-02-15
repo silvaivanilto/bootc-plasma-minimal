@@ -40,6 +40,7 @@ ibus-typing-booster
 fpaste
 auditctl
 ibus-gtk4
+unzip
 btop
 libnvidia-cfg
 libnvidia-gpucomp
