@@ -1,88 +1,67 @@
-# 🚀 Meu Fedora Bootc Customizado
+# 🚀 Fedora Bootc — KDE Plasma Minimal com Nvidia + Kernel CachyOS
 
-Este repositório contém a "receita" para o build automatizado da minha imagem de sistema operacional baseada em **Fedora 43**. O sistema é imutável, focado em performance com drivers **Nvidia** e interface **GNOME**.
+Imagem de sistema operacional imutável baseada em **Fedora 43 Bootc** com **KDE Plasma 6** minimal, **kernel CachyOS** e drivers **Nvidia** integrados.
 
-## 🛠️ Arquitetura do Projeto
+## 🛠️ O que está incluído
 
-* **Base:** Fedora Linux Versão (43)
-* **Interface:** GNOME Shell
-* **Drivers:** Nvidia (via Negativo17) incluso na `imagem`.
-* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)**.
+* **Base:** Fedora Linux 43 (Bootc — sistema imutável)
+* **Kernel:** CachyOS (via COPR `bieszczaders`) com sched_ext (`scx-scheds`)
+* **Interface:** KDE Plasma 6 (minimal, sem dependências fracas)
+* **Drivers Nvidia** (via Negativo17) — compilados contra o kernel CachyOS via multi-stage build
+* **Codecs:** FFmpeg, GStreamer, Phonon VLC (via RPM Fusion)
+* **Containers:** Podman, Distrobox, Flatpak
+* **Energia:** TLP com integração Nvidia power management
+* **GPU Híbrida:** switcheroo-control (AMD iGPU + Nvidia dGPU)
+* **Navegador:** Google Chrome
+* **Office:** LibreOffice
+* **Localização:** pt_BR completa (locale, teclado, langpacks)
+* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)** + notificação Telegram
 
 ## 📁 Estrutura de Arquivos
 
 | Arquivo | Função |
 | --- | --- |
-| `Containerfile` | Instruções de build da imagem (instalação de pacotes e drivers). |
-| `pacotes_rpm` | Lista de aplicativos e bibliotecas que o DNF deve instalar. |
-| `post-install.sh` | Scripts de configuração pós-instalação (remover fedora flatpak, add flathub e instala os flatpaks). |
-| `.github/workflows` | Contém o arquivo .yml do GitHub Actions para o build automático. |
-| `10-nvidia-args-.toml` | Configura os parâmetros para colocar nouveau no blacklist. |
-| `post-install.service` | Configura um serviço do systemd para baixar os flatpaks no primeiro boot após instalação |
-| `vconsole.conf` | Configura o TTY para pt-BR
-| `locale.conf` | Configura a localidade do sistema para pt-BR. | 
-| `config.toml` | Configura um arquivo Fedora kickstart para criar um ISO com anaconda para instalar a versão da imagem personalizada. |
+| `Containerfile` | Build multi-stage da imagem (CachyOS + Nvidia + KDE + sistema) |
+| `pacotes_rpm` | Lista de pacotes RPM organizados por categoria |
+| `10-nvidia-args.toml` | Argumentos do kernel (blacklist nouveau, modeset, power management) |
+| `nvidia-power-management.conf` | Config modprobe para gerenciamento dinâmico de energia Nvidia |
+| `vconsole.conf` | Layout de teclado BR para TTY |
+| `locale.conf` | Localidade do sistema pt_BR |
+| `config.toml` | Kickstart para gerar ISO de instalação com Btrfs |
+| `.github/workflows` | GitHub Actions para build automático diário |
 
-## ⚙️ Como Atualizar o Sistema
+## ⚙️ Como Usar
 
-A imagem é reconstruída diariamente às **03h45** (horário de Brasília). Como costumo acordar entre **07h00 e 08h00**, já encontro uma atualização pronta para aplicar logo pela manhã.
-
-Além disso, configurei no GitHub Actions a integração com o bot do Telegram **@Botfather**, que me notifica automaticamente pelo Telegram sempre que o build da imagem é concluído com sucesso ou apresenta alguma falha.
-
-![Imagem](https://i.imgur.com/5Ip7A1N.png)
-
-#### Atualização manual 
-1. Abra o terminal.
-2. Verifique se há atualizações:
-``` 
-sudo bootc upgrade --check
-```
-3. Realize o upgrade 
-```
-sudo bootc upgrade 
-```
-4. Verifique os pacotes que foram atualizados, após reiniciar com a nova imagem
-```
-rpm-ostree db diff
-```
-5. Se houver mudanças, reinicie o computador:
-```
-sudo reboot
-```
-## 🛠️ Comandos de Manutenção
-
-Se você precisar trocar de imagem ou verificar o estado atual:
-
-* **Verificar versão atual:**
-```
-bootc status
+### Atualizar o sistema
+```bash
+sudo bootc upgrade --check   # verifica atualizações
+sudo bootc upgrade            # aplica
+sudo reboot                   # reinicia com nova imagem
 ```
 
-* **Voltar para a versão anterior (Rollback):**
-```
-sudo bootc rollback
-```
-
-* **Mudar para esta imagem (Primeira vez):**
-```
-sudo bootc switch container-registry:tag
+### Manutenção
+```bash
+bootc status                  # versão atual
+sudo bootc rollback           # volta para versão anterior
 ```
 
-## 🤖 Criar uma ISO personalizada para instalar a imagem bootc
-#### Para criar a imagem personalizada
+### Mudar para esta imagem (primeira vez)
+```bash
+sudo bootc switch ghcr.io/SEU_USUARIO/bootc-plasma-minimal:latest
 ```
-git clone https://github.com/Ferlinuxdebian/bootc-gnome-minimal.git
-cd bootc-gnome-minimal
+
+## 🤖 Criar ISO de instalação
+
+```bash
+git clone https://github.com/SEU_USUARIO/bootc-plasma-minimal.git
+cd bootc-plasma-minimal
 mkdir output
-sudo podman build -t bootc-gnome-minimal -f Containerfile
+sudo podman build -t bootc-plasma-minimal -f Containerfile
 ```
-#### Para criar a ISO de instalação 
-```
+
+```bash
 sudo podman run \
-    --rm \
-    -it \
-    --privileged \
-    --pull=newer \
+    --rm -it --privileged --pull=newer \
     --security-opt label=type:unconfined_t \
     -v ./output:/output \
     -v ./config.toml:/config.toml:ro \
@@ -90,6 +69,7 @@ sudo podman run \
     quay.io/centos-bootc/bootc-image-builder:latest \
     --type anaconda-iso \
     --rootfs btrfs \
-    localhost/bootc-gnome-minimal
-``` 
-Após o processo de construção, basta acessar o diretório output e depois bootiso, dentro desse diretório você vai notar uma imagem ISO "install.iso", que você pode usar para instalar o sistema.
+    localhost/bootc-plasma-minimal
+```
+
+A ISO será gerada em `output/bootiso/install.iso`.
