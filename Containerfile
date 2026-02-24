@@ -26,9 +26,6 @@ echo "Kernel CachyOS: $KERNEL_VERSION"
 echo "Gera modules.dep manualmente (necessário para akmods)"
 depmod -a "$KERNEL_VERSION"
 
-echo "wget necessário para baixar repositórios"
-dnf5 -y install wget
-
 echo "Configura repositório negativo17 para drivers nvidia"
 wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
 https://negativo17.org/repos/fedora-nvidia-580.repo
@@ -56,6 +53,9 @@ set -e
 echo "Cria diretórios necessários"
 mkdir -vp /var/roothome /data /var/home
 
+echo "Instala wget necessário para baixar repositórios"
+dnf5 -y install wget
+
 echo "Baixa repositórios COPR do kernel CachyOS via wget"
 FEDORA_VER="$(rpm -E %fedora)"
 wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
@@ -77,10 +77,7 @@ echo "Troca zram padrão pelo cachyos-settings (ZRAM otimizado)"
 dnf5 -y swap zram-generator-defaults cachyos-settings || dnf5 -y install cachyos-settings || true
 
 echo "Configura SELinux para permitir carregamento de módulos do kernel"
-setsebool -P domain_kernel_load_modules on
-
-echo "wget necessário para baixar repositórios"
-dnf5 -y install wget
+setsebool -P domain_kernel_load_modules on || true
 
 echo "Configura repositório negativo17 para libs da nvidia necessárias"
 wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
