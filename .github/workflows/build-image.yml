@@ -3,12 +3,12 @@ name: Build e Push da Imagem Bootc
 on:
   schedule:
     # Dispara as 03h45 diariamente (horário de Brasília)
-    - cron: '45 6 * * *'
+    - cron: "45 6 * * *"
   push:
     branches:
       - main
     paths-ignore:
-      - 'README.md'
+      - "README.md"
   workflow_dispatch:
 
 env:
@@ -69,26 +69,3 @@ jobs:
           no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Notificar Sucesso no Telegram
-        if: success()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ✅ Rebuild Completo Bootc concluído!
-            Base: ${{ steps.base_version.outputs.version }}
-            Tag Gerada: ${{ steps.base_version.outputs.version }}-${{ steps.timestamp.outputs.date }}
-            Repositório: ${{ github.repository }}
-
-      - name: Notificar Falha no Telegram
-        if: failure()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            ❌ Erro no Rebuild Agendado!
-            Base tentada: ${{ steps.base_version.outputs.version }}
-            Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

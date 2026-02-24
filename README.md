@@ -15,7 +15,7 @@ Imagem de sistema operacional imutável baseada em **Fedora 43 Bootc** com **KDE
 * **Navegador:** Google Chrome
 * **Office:** LibreOffice
 * **Localização:** pt_BR completa (locale, teclado, langpacks)
-* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)** + notificação Telegram
+* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)**
 
 ## 📁 Estrutura de Arquivos
 
