@@ -121,6 +121,14 @@ langpacks-core-pt_BR
 langpacks-pt_BR
 langpacks-fonts-pt
 
+# Fontes (substitutos Microsoft + Nerd Fonts)
+google-arimo-fonts
+google-caladea-fonts
+google-carlito-fonts
+comic-neue-fonts
+google-cousine-fonts
+google-tinos-fonts
+
 # Nvidia (libs)
 libva-nvidia-driver
 libnvidia-cfg

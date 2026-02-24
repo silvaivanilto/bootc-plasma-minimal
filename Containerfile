@@ -6,7 +6,7 @@ RUN <<ELL
 set -e
 
 echo "Habilita repositórios COPR do kernel CachyOS"
-dnf5 -y install 'dnf-command(copr)'
+dnf5 -y install 'dnf5-command(copr)'
 dnf5 copr enable -y bieszczaders/kernel-cachyos
 dnf5 copr enable -y bieszczaders/kernel-cachyos-addons
 
@@ -51,7 +51,7 @@ echo "Cria diretórios necessários"
 mkdir -vp /var/roothome /data /var/home
 
 echo "Habilita repositórios COPR do kernel CachyOS"
-dnf5 -y install 'dnf-command(copr)'
+dnf5 -y install 'dnf5-command(copr)'
 dnf5 copr enable -y bieszczaders/kernel-cachyos
 dnf5 copr enable -y bieszczaders/kernel-cachyos-addons
 
@@ -151,6 +151,11 @@ echo "Limpeza de resíduos de construção"
 rm -rvf pacotes_rpm 
 dnf5 clean all
 EOR
+
+# Instala fontes locais (Google Sans + Nerd Fonts Symbols Only)
+COPY fonts/google-sans/ /usr/share/fonts/google-sans/
+COPY fonts/nerd-fonts/ /usr/share/fonts/nerd-fonts-symbols/
+RUN fc-cache -fv
 
 # Verificar por erros na imagem 
 RUN bootc container lint
