@@ -91,7 +91,7 @@ dnf5 -y install \
 
 echo "Configura repositório do Google Chrome"
 dnf5 -y install fedora-workstation-repositories
-dnf5 config-manager setopt google-chrome.enabled=1
+sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/google-chrome.repo
 
 echo "Configura repositório do TLP (tlp-pd ainda não está nos repos oficiais)"
 dnf5 -y install "https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc${FEDORA_VER}.noarch.rpm" || true
