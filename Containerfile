@@ -5,20 +5,26 @@ FROM quay.io/fedora/fedora-bootc:43 AS builder
 RUN <<ELL
 set -e
 
-echo "Habilita repositórios COPR do kernel CachyOS"
-dnf5 -y install 'dnf5-command(copr)'
-dnf5 copr enable -y bieszczaders/kernel-cachyos
-dnf5 copr enable -y bieszczaders/kernel-cachyos-addons
+echo "Baixa repositórios COPR do kernel CachyOS via wget"
+dnf5 -y install wget
+FEDORA_VER="$(rpm -E %fedora)"
+wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
+  "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-fedora-${FEDORA_VER}.repo"
+wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos-addons.repo \
+  "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos-addons/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-addons-fedora-${FEDORA_VER}.repo"
 
-echo "Instala o kernel CachyOS e o devel correspondente"
-dnf5 -y install kernel-cachyos kernel-cachyos-devel-matched
+echo "Instala o kernel CachyOS e o devel (sem scriptlets para evitar erro do dracut no container)"
+dnf5 -y install --setopt=tsflags=noscripts kernel-cachyos kernel-cachyos-devel-matched
 
 echo "Remove o kernel Fedora padrão para evitar conflitos"
-dnf5 -y remove kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
+dnf5 -y remove --setopt=tsflags=noscripts kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
 
 echo "Identifica a versão do kernel CachyOS instalada"
 KERNEL_VERSION="$(rpm -q kernel-cachyos --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
 echo "Kernel CachyOS: $KERNEL_VERSION"
+
+echo "Gera modules.dep manualmente (necessário para akmods)"
+depmod -a "$KERNEL_VERSION"
 
 echo "wget necessário para baixar repositórios"
 dnf5 -y install wget
@@ -50,16 +56,22 @@ set -e
 echo "Cria diretórios necessários"
 mkdir -vp /var/roothome /data /var/home
 
-echo "Habilita repositórios COPR do kernel CachyOS"
-dnf5 -y install 'dnf5-command(copr)'
-dnf5 copr enable -y bieszczaders/kernel-cachyos
-dnf5 copr enable -y bieszczaders/kernel-cachyos-addons
+echo "Baixa repositórios COPR do kernel CachyOS via wget"
+FEDORA_VER="$(rpm -E %fedora)"
+wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
+  "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-fedora-${FEDORA_VER}.repo"
+wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos-addons.repo \
+  "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos-addons/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-addons-fedora-${FEDORA_VER}.repo"
 
-echo "Instala o kernel CachyOS"
-dnf5 -y install kernel-cachyos
+echo "Instala o kernel CachyOS (sem scriptlets para evitar erro do dracut no container)"
+dnf5 -y install --setopt=tsflags=noscripts kernel-cachyos
 
 echo "Remove o kernel Fedora padrão"
-dnf5 -y remove kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
+dnf5 -y remove --setopt=tsflags=noscripts kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
+
+echo "Gera modules.dep manualmente"
+KERNEL_VERSION="$(rpm -q kernel-cachyos --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
+depmod -a "$KERNEL_VERSION"
 
 echo "Troca zram padrão pelo cachyos-settings (ZRAM otimizado)"
 dnf5 -y swap zram-generator-defaults cachyos-settings || dnf5 -y install cachyos-settings || true
@@ -83,6 +95,9 @@ dnf5 -y install \
 echo "Configura repositório do Google Chrome"
 dnf5 -y install fedora-workstation-repositories
 dnf5 config-manager setopt google-chrome.enabled=1
+
+echo "Configura repositório do TLP (tlp-pd ainda não está nos repos oficiais)"
+dnf5 -y install "https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc${FEDORA_VER}.noarch.rpm" || true
 
 echo "Desabilita dependências fracas para manter a imagem minimal"
 echo "install_weak_deps=False" >> /etc/dnf/dnf.conf
@@ -139,6 +154,7 @@ systemctl set-default graphical.target
 
 echo "Habilita TLP para gerenciamento de energia"
 systemctl enable tlp.service
+systemctl enable tlp-pd.service || true
 systemctl mask systemd-rfkill.service systemd-rfkill.socket
 
 echo "Habilita serviços Nvidia de suspend/hibernate/resume"
