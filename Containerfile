@@ -73,6 +73,18 @@ echo "Gera modules.dep manualmente"
 KERNEL_VERSION="$(rpm -q kernel-cachyos --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
 depmod -a "$KERNEL_VERSION"
 
+echo "Configura dracut para incluir módulos essenciais no initramfs"
+echo "Necessário porque o kernel CachyOS foi instalado com noscripts"
+mkdir -p /etc/dracut.conf.d
+cat > /etc/dracut.conf.d/99-bootc-essential.conf << 'DRACUT'
+# Módulos de filesystem essenciais
+filesystems+=" btrfs ext4 "
+# Módulos de storage para VMs e hardware real
+drivers+=" virtio_blk virtio_scsi virtio_pci nvme ahci sd_mod "
+# Módulo dracut para btrfs
+add_dracutmodules+=" btrfs "
+DRACUT
+
 echo "Troca zram padrão pelo cachyos-settings (ZRAM otimizado)"
 dnf5 -y swap zram-generator-defaults cachyos-settings || dnf5 -y install cachyos-settings || true
 
@@ -154,10 +166,8 @@ systemctl enable tlp.service
 systemctl enable tlp-pd.service || true
 systemctl mask systemd-rfkill.service systemd-rfkill.socket
 
-echo "Habilita serviços Nvidia de suspend/hibernate/resume"
-systemctl enable nvidia-suspend.service || true
-systemctl enable nvidia-hibernate.service || true
-systemctl enable nvidia-resume.service || true
+echo "Habilita serviço Nvidia persistenced"
+echo "Os serviços de suspend/hibernate/resume já são habilitados pelo %post do nvidia-driver"
 systemctl enable nvidia-persistenced.service || true
 
 echo "Limpeza de resíduos de construção" 

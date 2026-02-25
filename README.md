@@ -47,29 +47,29 @@ sudo bootc rollback           # volta para versão anterior
 
 ### Mudar para esta imagem (primeira vez)
 ```bash
-sudo bootc switch ghcr.io/SEU_USUARIO/bootc-plasma-minimal:latest
+sudo bootc switch ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
 ```
 
 ## 🤖 Criar ISO de instalação
 
 ```bash
-git clone https://github.com/SEU_USUARIO/bootc-plasma-minimal.git
+git clone https://github.com/silvaivanilto/bootc-plasma-minimal.git
 cd bootc-plasma-minimal
-mkdir output
-sudo podman build -t bootc-plasma-minimal -f Containerfile
-```
+mkdir -p output
 
-```bash
+# Puxa a imagem do registry
+sudo podman pull ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
+
+# Gera a ISO
 sudo podman run \
-    --rm -it --privileged --pull=newer \
-    --security-opt label=type:unconfined_t \
-    -v ./output:/output \
+    --rm -it --privileged \
     -v ./config.toml:/config.toml:ro \
+    -v ./output:/output \
     -v /var/lib/containers/storage:/var/lib/containers/storage \
     quay.io/centos-bootc/bootc-image-builder:latest \
     --type anaconda-iso \
     --rootfs btrfs \
-    localhost/bootc-plasma-minimal
+    ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
 ```
 
 A ISO será gerada em `output/bootiso/install.iso`.
