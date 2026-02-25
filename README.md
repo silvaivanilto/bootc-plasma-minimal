@@ -15,7 +15,7 @@ Imagem de sistema operacional imutável baseada em **Fedora 43 Bootc** com **KDE
 * **Navegador:** Google Chrome
 * **Office:** LibreOffice
 * **Localização:** pt_BR completa (locale, teclado, langpacks)
-* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)**
+* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)** + ISO na aba Releases
 
 ## 📁 Estrutura de Arquivos
 
@@ -28,7 +28,30 @@ Imagem de sistema operacional imutável baseada em **Fedora 43 Bootc** com **KDE
 | `vconsole.conf` | Layout de teclado BR para TTY |
 | `locale.conf` | Localidade do sistema pt_BR |
 | `config.toml` | Kickstart para gerar ISO de instalação com Btrfs |
-| `.github/workflows` | GitHub Actions para build automático diário |
+| `.github/workflows` | GitHub Actions para build automático diário + ISO |
+
+## 📥 Download da ISO
+
+A ISO de instalação é publicada automaticamente na aba [**Releases**](../../releases) do GitHub, dividida em partes de ~1.9GB.
+
+### Baixar e remontar
+
+```bash
+# Baixe todas as partes .part e o SHA256SUMS.txt da Release mais recente
+# Depois remonte a ISO:
+cat install.iso.*.part > install.iso
+
+# Verifique a integridade
+sha256sum -c SHA256SUMS.txt
+```
+
+### Gravar no pendrive
+
+```bash
+sudo dd if=install.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+> ⚠️ Substitua `/dev/sdX` pelo dispositivo correto do seu pendrive!
 
 ## ⚙️ Como Usar
 
@@ -50,7 +73,7 @@ sudo bootc rollback           # volta para versão anterior
 sudo bootc switch ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
 ```
 
-## 🤖 Criar ISO de instalação
+## 🤖 Criar ISO localmente
 
 ```bash
 git clone https://github.com/silvaivanilto/bootc-plasma-minimal.git
