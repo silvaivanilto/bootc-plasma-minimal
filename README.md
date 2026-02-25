@@ -1,98 +1,109 @@
-# 🚀 Fedora Bootc — KDE Plasma Minimal com Nvidia + Kernel CachyOS
+<p align="center">
+  <img src="https://img.shields.io/badge/Fedora-43-blue?style=for-the-badge&logo=fedora" alt="Fedora 43">
+  <img src="https://img.shields.io/badge/KDE_Plasma-6-blue?style=for-the-badge&logo=kde" alt="KDE Plasma 6">
+  <img src="https://img.shields.io/badge/Kernel-CachyOS-orange?style=for-the-badge" alt="CachyOS">
+  <img src="https://img.shields.io/badge/Nvidia-Integrado-76b900?style=for-the-badge&logo=nvidia" alt="Nvidia">
+  <img src="https://img.shields.io/badge/Bootc-Imut%C3%A1vel-purple?style=for-the-badge" alt="Bootc">
+</p>
 
-Imagem de sistema operacional imutável baseada em **Fedora 43 Bootc** com **KDE Plasma 6** minimal, **kernel CachyOS** e drivers **Nvidia** integrados.
+# Fedora Bootc — KDE Plasma Minimal
 
-## 🛠️ O que está incluído
+Sistema operacional **imutável** baseado em Fedora 43 Bootc com KDE Plasma 6, kernel CachyOS e drivers Nvidia — tudo integrado e atualizado automaticamente.
 
-* **Base:** Fedora Linux 43 (Bootc — sistema imutável)
-* **Kernel:** CachyOS (via COPR `bieszczaders`) com sched_ext (`scx-scheds`)
-* **Interface:** KDE Plasma 6 (minimal, sem dependências fracas)
-* **Drivers Nvidia** (via Negativo17) — compilados contra o kernel CachyOS via multi-stage build
-* **Codecs:** FFmpeg, GStreamer, Phonon VLC (via RPM Fusion)
-* **Containers:** Podman, Distrobox, Flatpak
-* **Energia:** TLP com integração Nvidia power management
-* **GPU Híbrida:** switcheroo-control (AMD iGPU + Nvidia dGPU)
-* **Navegador:** Google Chrome
-* **Office:** LibreOffice
-* **Localização:** pt_BR completa (locale, teclado, langpacks)
-* **Automação:** GitHub Actions com build diário às **03:45 (Brasília)** + ISO na aba Releases
+---
 
-## 📁 Estrutura de Arquivos
+## ✨ Destaques
 
-| Arquivo | Função |
-| --- | --- |
-| `Containerfile` | Build multi-stage da imagem (CachyOS + Nvidia + KDE + sistema) |
-| `pacotes_rpm` | Lista de pacotes RPM organizados por categoria |
-| `10-nvidia-args.toml` | Argumentos do kernel (blacklist nouveau, modeset, power management) |
-| `nvidia-power-management.conf` | Config modprobe para gerenciamento dinâmico de energia Nvidia |
-| `vconsole.conf` | Layout de teclado BR para TTY |
-| `locale.conf` | Localidade do sistema pt_BR |
-| `config.toml` | Kickstart para gerar ISO de instalação com Btrfs |
-| `.github/workflows` | GitHub Actions para build automático diário + ISO |
+| | Componente | Descrição |
+|---|---|---|
+| 🐧 | **Fedora 43 Bootc** | Base imutável com atualizações atômicas |
+| ⚡ | **Kernel CachyOS** | Otimizado para desktop, com `sched_ext` (scx-scheds) |
+| 🖥️ | **KDE Plasma 6** | Interface minimal, sem dependências fracas |
+| 🎮 | **Nvidia (Negativo17)** | Driver compilado contra o kernel CachyOS via multi-stage build |
+| 🎬 | **Codecs completos** | FFmpeg, GStreamer, Phonon VLC (via RPM Fusion) |
+| 📦 | **Containers** | Podman, Distrobox, Flatpak |
+| 🔋 | **TLP** | Gerenciamento de energia com integração Nvidia |
+| 🔀 | **GPU Híbrida** | switcheroo-control (AMD iGPU + Nvidia dGPU) |
+| 🌐 | **Google Chrome** | Navegador pré-instalado |
+| 📝 | **LibreOffice** | Suite office completa |
+| 🇧🇷 | **pt_BR** | Localização completa (idioma, teclado, langpacks) |
+
+---
 
 ## 📥 Download da ISO
 
-A ISO de instalação é publicada automaticamente na aba [**Releases**](../../releases) do GitHub, dividida em partes de ~1.9GB.
+A ISO de instalação é publicada automaticamente na aba [**Releases**](../../releases), dividida em partes de ~1.9GB.
 
-### Baixar e remontar
+**Baixar e remontar:**
 
 ```bash
-# Baixe todas as partes .part e o SHA256SUMS.txt da Release mais recente
-# Depois remonte a ISO:
+# 1. Baixe todas as partes .part e o SHA256SUMS.txt da Release mais recente
+
+# 2. Remonte a ISO
 cat install.iso.*.part > install.iso
 
-# Verifique a integridade
+# 3. Verifique a integridade
 sha256sum -c SHA256SUMS.txt
-```
 
-### Gravar no pendrive
-
-```bash
+# 4. Grave no pendrive (substitua /dev/sdX pelo dispositivo correto!)
 sudo dd if=install.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-> ⚠️ Substitua `/dev/sdX` pelo dispositivo correto do seu pendrive!
+---
 
-## ⚙️ Como Usar
+## ⚙️ Uso no dia a dia
 
-### Atualizar o sistema
 ```bash
-sudo bootc upgrade --check   # verifica atualizações
-sudo bootc upgrade            # aplica
-sudo reboot                   # reinicia com nova imagem
+# Verificar atualizações
+sudo bootc upgrade --check
+
+# Aplicar atualização
+sudo bootc upgrade
+sudo reboot
+
+# Ver versão atual
+bootc status
+
+# Voltar para versão anterior
+sudo bootc rollback
 ```
 
-### Manutenção
-```bash
-bootc status                  # versão atual
-sudo bootc rollback           # volta para versão anterior
-```
+**Primeira instalação via container (sem ISO):**
 
-### Mudar para esta imagem (primeira vez)
 ```bash
 sudo bootc switch ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
 ```
 
-## 🤖 Criar ISO localmente
+---
 
-```bash
-git clone https://github.com/silvaivanilto/bootc-plasma-minimal.git
-cd bootc-plasma-minimal
-mkdir -p output
+## 📁 Estrutura do Projeto
 
-# Puxa a imagem do registry
-sudo podman pull ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
-
-# Gera a ISO
-sudo podman run \
-    --rm -it --privileged \
-    -v ./config.toml:/config.toml:ro \
-    -v ./output:/output \
-    -v /var/lib/containers/storage:/var/lib/containers/storage \
-    quay.io/centos-bootc/bootc-image-builder:latest \
-    --type anaconda-iso \
-    --rootfs btrfs \
-    ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
+```
+├── Containerfile              # Build multi-stage (CachyOS + Nvidia + KDE)
+├── config/
+│   ├── locale.conf            # Localização pt_BR.UTF-8
+│   └── vconsole.conf          # Teclado ABNT2 para TTY
+├── nvidia/
+│   ├── 10-nvidia-args.toml    # Kernel args (blacklist nouveau, modeset)
+│   └── nvidia-power-management.conf
+├── packages/
+│   └── pacotes_rpm            # Lista de pacotes RPM por categoria
+├── fonts/
+│   ├── google-sans/           # Google Sans Flex (variable font)
+│   └── nerd-fonts/            # Nerd Fonts Symbols Only
+├── iso/
+│   └── config.toml            # Kickstart Anaconda (Btrfs + subvolumes)
+└── .github/workflows/
+    └── build-image.yml        # CI/CD: build diário + ISO → Releases
 ```
 
-A ISO será gerada em `output/bootiso/install.iso`.
+---
+
+## 🔄 Automação
+
+O GitHub Actions executa diariamente às **06:00 (Fortaleza)**:
+
+1. **Build** da imagem container → push para GHCR
+2. **Geração da ISO** → split em partes de 1.9GB → upload como Release
+
+Também dispara automaticamente em cada push na branch `main`.

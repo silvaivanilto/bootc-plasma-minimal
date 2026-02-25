@@ -1,31 +1,44 @@
+# ╔══════════════════════════════════════════════╗
+# ║  Configuração do Instalador Anaconda (ISO)   ║
+# ╚══════════════════════════════════════════════╝
+
+# Módulos do Anaconda habilitados na instalação
 [customizations.installer.modules]
 enable = [
-  "org.fedoraproject.Anaconda.Modules.Storage",
-  "org.fedoraproject.Anaconda.Modules.Users",
-  "org.fedoraproject.Anaconda.Modules.Network",
-  "org.fedoraproject.Anaconda.Modules.Timezone"
+  "org.fedoraproject.Anaconda.Modules.Localization",  # Seleção de idioma e teclado
+  "org.fedoraproject.Anaconda.Modules.Storage",       # Particionamento de disco
+  "org.fedoraproject.Anaconda.Modules.Users",         # Criação de usuário e senha root
+  "org.fedoraproject.Anaconda.Modules.Network",       # Configuração de rede
+  "org.fedoraproject.Anaconda.Modules.Timezone"       # Seleção de fuso horário
 ]
 
+# Kickstart — script de instalação automática
 [customizations.installer.kickstart]
 contents = """
+# Limpa todas as partições existentes e cria nova tabela
 clearpart --all --initlabel
 zerombr
 
-# EFI
+# Idioma: será selecionado interativamente pelo usuário no Anaconda
+# Teclado ABNT2 e fuso de Fortaleza como padrão
+keyboard --xlayouts='br'
+timezone America/Fortaleza --utc
+
+# Partição EFI (600MB) — necessária para boot UEFI
 part /boot/efi --fstype=efi --size=600 --fsoptions="umask=0077,shortname=winnt"
 
-# /boot
+# Partição /boot (2GB) — kernel e initramfs
 part /boot --fstype=ext4 --size=2048
 
-# Partição Btrfs única
+# Partição Btrfs única — ocupa todo o espaço restante
 part btrfs.01 --fstype=btrfs --grow
 
-# Volume Btrfs
-btrfs none --label=fedora btrfs.01
+# Volume Btrfs com label "bootc-plasma"
+btrfs none --label=bootc-plasma btrfs.01
 
-# Subvolumes
-btrfs /     --subvol --name=root LABEL=fedora
-btrfs /var  --subvol --name=var  LABEL=fedora
-btrfs /home --subvol --name=home LABEL=fedora
-btrfs /var/lib/flatpak --subvol --name=flatpak LABEL=fedora
+# Subvolumes Btrfs — permite snapshots independentes por área
+btrfs /     --subvol --name=root LABEL=bootc-plasma          # Sistema (/)
+btrfs /var  --subvol --name=var  LABEL=bootc-plasma          # Dados variáveis (logs, containers)
+btrfs /home --subvol --name=home LABEL=bootc-plasma          # Arquivos do usuário
+btrfs /var/lib/flatpak --subvol --name=flatpak LABEL=bootc-plasma  # Apps Flatpak isolados
 """

@@ -1,11 +1,27 @@
-# Estágio de build do módulo da nvidia numa imagem separada
-# Para evitar poluir a imagem final com os pacotes de desenvolvimento do kernel e ferramentas de construção
+# ============================================================================
+# 🚀 Fedora Bootc — KDE Plasma Minimal + Nvidia + Kernel CachyOS
+# ============================================================================
+#
+# Build multi-stage:
+#   1. BUILDER  → Compila o módulo Nvidia contra o kernel CachyOS
+#   2. FINAL    → Monta a imagem final com KDE Plasma, drivers e configurações
+#
+# ============================================================================
+
+
+# ============================================================================
+# ESTÁGIO 1: Builder — Compilação do módulo Nvidia
+# ============================================================================
+# Imagem temporária apenas para compilar o kmod-nvidia.
+# Nada deste estágio vai para a imagem final, exceto o .rpm gerado.
+# ============================================================================
+
 FROM quay.io/fedora/fedora-bootc:43 AS builder
 
 RUN <<ELL
 set -e
 
-echo "Baixa repositórios COPR do kernel CachyOS via wget"
+# --- Repositórios COPR do kernel CachyOS ---
 dnf5 -y install wget
 FEDORA_VER="$(rpm -E %fedora)"
 wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
@@ -13,172 +29,205 @@ wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
 wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos-addons.repo \
   "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos-addons/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-addons-fedora-${FEDORA_VER}.repo"
 
-echo "Instala o kernel CachyOS e o devel (sem scriptlets para evitar erro do dracut no container)"
+# --- Kernel CachyOS + headers para compilação ---
+# noscripts: evita erro do dracut dentro do container
 dnf5 -y install --setopt=tsflags=noscripts kernel-cachyos kernel-cachyos-devel-matched
 
-echo "Remove o kernel Fedora padrão para evitar conflitos"
-dnf5 -y remove --setopt=tsflags=noscripts kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
+# --- Remove kernel Fedora padrão (evita conflitos) ---
+dnf5 -y remove --setopt=tsflags=noscripts \
+  kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
 
-echo "Identifica a versão do kernel CachyOS instalada"
+# --- Prepara módulos do kernel ---
 KERNEL_VERSION="$(rpm -q kernel-cachyos --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
-echo "Kernel CachyOS: $KERNEL_VERSION"
-
-echo "Gera modules.dep manualmente (necessário para akmods)"
+echo ">>> Kernel CachyOS: $KERNEL_VERSION"
 depmod -a "$KERNEL_VERSION"
 
-echo "Configura repositório negativo17 para drivers nvidia"
+# --- Repositório Negativo17 (Nvidia) ---
 wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
-https://negativo17.org/repos/fedora-nvidia-580.repo
+  https://negativo17.org/repos/fedora-nvidia-580.repo
 
-echo "Instala o driver da nvidia"
+# --- Instala driver Nvidia + compila módulo ---
 dnf5 install -y nvidia-driver nvidia-driver-cuda --refresh
-
-echo "Build nvidia kernel module para o kernel CachyOS: $KERNEL_VERSION"
 akmods --force --kernels "$KERNEL_VERSION"
 ELL
 
-# Imagem final do container
+
+# ============================================================================
+# ESTÁGIO 2: Imagem Final
+# ============================================================================
+
 FROM quay.io/fedora/fedora-bootc:43
 
-# Copia o módulo da nvidia construído no estágio anterior
+# ----------------------------------------------------------------------------
+# 2.1 — Copia arquivos de configuração e o kmod-nvidia
+# ----------------------------------------------------------------------------
 COPY --from=builder /var/cache/akmods/nvidia/kmod-nvidia*.rpm ./
+COPY config/locale.conf config/vconsole.conf ./
+COPY nvidia/10-nvidia-args.toml nvidia/nvidia-power-management.conf ./
+COPY packages/pacotes_rpm ./
 
-# Copia os arquivos necessários para o container
-COPY 10-nvidia-args.toml locale.conf pacotes_rpm vconsole.conf nvidia-power-management.conf ./
-
-# Bloco com a configuração base do sistema, kernel CachyOS, Nvidia e repositórios extras
+# ----------------------------------------------------------------------------
+# 2.2 — Kernel CachyOS + Repositórios + Nvidia + Configurações do sistema
+# ----------------------------------------------------------------------------
 RUN <<EOF
 set -e
 
-echo "Cria diretórios necessários"
+# ┌─────────────────────────────────────────┐
+# │  Diretórios base do sistema             │
+# └─────────────────────────────────────────┘
 mkdir -vp /var/roothome /data /var/home
 
-echo "Instala wget necessário para baixar repositórios"
+# ┌─────────────────────────────────────────┐
+# │  Kernel CachyOS                         │
+# └─────────────────────────────────────────┘
 dnf5 -y install wget
-
-echo "Baixa repositórios COPR do kernel CachyOS via wget"
 FEDORA_VER="$(rpm -E %fedora)"
+
+# Repositórios COPR
 wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos.repo \
   "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-fedora-${FEDORA_VER}.repo"
 wget -O /etc/yum.repos.d/bieszczaders-kernel-cachyos-addons.repo \
   "https://copr.fedorainfracloud.org/coprs/bieszczaders/kernel-cachyos-addons/repo/fedora-${FEDORA_VER}/bieszczaders-kernel-cachyos-addons-fedora-${FEDORA_VER}.repo"
 
-echo "Instala o kernel CachyOS (sem scriptlets para evitar erro do dracut no container)"
+# Instala kernel (noscripts: dracut não roda em container)
 dnf5 -y install --setopt=tsflags=noscripts kernel-cachyos
 
-echo "Remove o kernel Fedora padrão"
-dnf5 -y remove --setopt=tsflags=noscripts kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
+# Remove kernel Fedora padrão
+dnf5 -y remove --setopt=tsflags=noscripts \
+  kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true
 
-echo "Gera modules.dep manualmente"
+# Gera modules.dep manualmente
 KERNEL_VERSION="$(rpm -q kernel-cachyos --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}')"
 depmod -a "$KERNEL_VERSION"
 
-echo "Configura dracut para incluir módulos essenciais no initramfs"
-echo "Necessário porque o kernel CachyOS foi instalado com noscripts"
+# Dracut: garante que btrfs e virtio estejam no initramfs
+# (necessário porque noscripts pula a geração automática)
 mkdir -p /etc/dracut.conf.d
 cat > /etc/dracut.conf.d/99-bootc-essential.conf << 'DRACUT'
-# Módulos de filesystem essenciais
 filesystems+=" btrfs ext4 "
-# Módulos de storage para VMs e hardware real
 drivers+=" virtio_blk virtio_scsi virtio_pci nvme ahci sd_mod "
-# Módulo dracut para btrfs
 add_dracutmodules+=" btrfs "
 DRACUT
 
-echo "Troca zram padrão pelo cachyos-settings (ZRAM otimizado)"
-dnf5 -y swap zram-generator-defaults cachyos-settings || dnf5 -y install cachyos-settings || true
+# CachyOS Settings (ZRAM otimizado + sched_ext)
+dnf5 -y swap zram-generator-defaults cachyos-settings \
+  || dnf5 -y install cachyos-settings || true
 
-echo "Configura SELinux para permitir carregamento de módulos do kernel"
-setsebool -P domain_kernel_load_modules on || true
-
-echo "Configura repositório negativo17 para libs da nvidia necessárias"
+# ┌─────────────────────────────────────────┐
+# │  Repositórios extras                    │
+# └─────────────────────────────────────────┘
+# Negativo17 (libs Nvidia)
 wget -O /etc/yum.repos.d/fedora-nvidia-580.repo \
-https://negativo17.org/repos/fedora-nvidia-580.repo
+  https://negativo17.org/repos/fedora-nvidia-580.repo
 
-echo "Configura repositórios RPM Fusion (free + nonfree) para codecs"
-FEDORA_VER="$(rpm -E %fedora)"
+# RPM Fusion (codecs multimídia)
 dnf5 -y install \
-    "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_VER}.noarch.rpm" \
-    "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_VER}.noarch.rpm"
+  "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_VER}.noarch.rpm" \
+  "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_VER}.noarch.rpm"
 
-echo "Configura repositório do Google Chrome"
+# Google Chrome
 dnf5 -y install fedora-workstation-repositories
 sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/google-chrome.repo
 
-echo "Configura repositório do TLP (tlp-pd ainda não está nos repos oficiais)"
-dnf5 -y install "https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc${FEDORA_VER}.noarch.rpm" || true
+# TLP (tlp-pd ainda não está nos repos oficiais)
+dnf5 -y install \
+  "https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc${FEDORA_VER}.noarch.rpm" || true
 
-echo "Desabilita dependências fracas para manter a imagem minimal"
-echo "install_weak_deps=False" >> /etc/dnf/dnf.conf
-
-echo "instalar o pacote do nvidia-kmod-common e nvidia-driver-cuda necessários, mas sem toda as dependências para construção do módulo"
+# ┌─────────────────────────────────────────┐
+# │  Nvidia — driver e módulo do kernel     │
+# └─────────────────────────────────────────┘
+# Instala dependências mínimas (sem ferramentas de build)
 dnf5 download nvidia-kmod-common nvidia-driver-cuda
 rpm -vi --nodeps nvidia-kmod-common*.rpm
 rpm -vi --nodeps nvidia-driver-cuda*.rpm
 
-echo "instalar o kmod-nvidia previamente construído na imagem anterior"
+# Instala o kmod-nvidia compilado no estágio 1
 dnf5 -y install ./kmod-nvidia-*.rpm
 
-echo "Para /opt gravavel"
-rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt
+# ┌─────────────────────────────────────────┐
+# │  Configurações do sistema               │
+# └─────────────────────────────────────────┘
+# Dependências fracas desabilitadas (imagem minimal)
+echo "install_weak_deps=False" >> /etc/dnf/dnf.conf
 
-echo "Para /usr/local gravavel"
+# SELinux: permite carregamento de módulos do kernel
+setsebool -P domain_kernel_load_modules on || true
+
+# /opt e /usr/local graváveis (bootc exige que estejam em /var)
+rm -rvf /opt && mkdir -vp /var/opt && ln -vs /var/opt /opt
 mkdir -vp /var/usrlocal && mv -v /usr/local/* /var/usrlocal/ 2>/dev/null || true
 rm -rvf /usr/local && ln -vs /var/usrlocal /usr/local
 
-echo "Configura o TTY para o layout de teclado BR, bem como o sistema de locale PT-BR"
-mv -v vconsole.conf /etc/vconsole.conf
+# Localização pt_BR e teclado ABNT2
 mv -v locale.conf /etc/locale.conf
+mv -v vconsole.conf /etc/vconsole.conf
 
-echo "Configura os argumentos do kernel para nvidia"
-echo "veja a doc https://bit.ly/4qA7J73"
+# Nvidia: argumentos do kernel (blacklist nouveau, modeset, power management)
+# Docs: https://bit.ly/4qA7J73
 mv -v 10-nvidia-args.toml /usr/lib/bootc/kargs.d/10-nvidia-args.toml
-
-echo "Configura gerenciamento dinâmico de energia da Nvidia"
 mv -v nvidia-power-management.conf /etc/modprobe.d/nvidia-power-management.conf
 
-echo "Atualiza todo o container para os pacotes mais recentes, mas não mexe no kernel nem no bootloader"
-echo "Veja a doc https://bit.ly/4aPjNvJ"
-dnf5 -y upgrade --refresh -x 'kernel*' -x 'kernel-cachyos*' -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
+# ┌─────────────────────────────────────────┐
+# │  Atualização geral do sistema           │
+# └─────────────────────────────────────────┘
+# Atualiza tudo exceto kernel/bootloader (evita conflitos)
+# Docs: https://bit.ly/4aPjNvJ
+dnf5 -y upgrade --refresh \
+  -x 'kernel*' -x 'kernel-cachyos*' \
+  -x 'grub2*' -x 'dracut*' -x 'shim*' -x 'fwupd*'
 
-echo "Limpeza de residuos desse bloco de construção, para reduzir o tamanho da imagem final"
+# ┌─────────────────────────────────────────┐
+# │  Limpeza                                │
+# └─────────────────────────────────────────┘
 rm -rvf kmod-nvidia-*.rpm nvidia-kmod-common*.rpm nvidia-driver-cuda*.rpm
 dnf5 clean all
 EOF
 
-# Bloco para instalar os pacotes rpm listados no arquivo pacotes_rpm
-# Inclui KDE Plasma, codecs, TLP, Chrome, containers, scx-scheds e libs Nvidia
+# ----------------------------------------------------------------------------
+# 2.3 — Pacotes RPM (KDE Plasma, codecs, apps, containers, etc.)
+# ----------------------------------------------------------------------------
 RUN <<EOR
 set -e
 
-echo "instala os pacotes rpm listados no arquivo pacotes_rpm"
-grep -v '^#' pacotes_rpm | grep -v '^$' | tr '\n' ' ' | xargs dnf5 install -y --skip-unavailable --exclude=power-profiles-daemon --exclude=toolbox
+# Instala todos os pacotes listados em packages/pacotes_rpm
+grep -v '^#' pacotes_rpm | grep -v '^$' | sed 's/#.*//' | tr '\n' ' ' | \
+  xargs dnf5 install -y --skip-unavailable \
+    --exclude=power-profiles-daemon \
+    --exclude=toolbox
 
-echo "Habilita serviços necessários"
-systemctl mask systemd-remount-fs.service
-
-echo "Habilita o Plasma Login Manager como display manager"
+# ┌─────────────────────────────────────────┐
+# │  Serviços do sistema                    │
+# └─────────────────────────────────────────┘
+# Display Manager (KDE Plasma Login)
 systemctl enable plasmalogin.service
 systemctl set-default graphical.target
 
-echo "Habilita TLP para gerenciamento de energia"
+# Energia (TLP)
 systemctl enable tlp.service
 systemctl enable tlp-pd.service || true
 systemctl mask systemd-rfkill.service systemd-rfkill.socket
 
-echo "Habilita serviço Nvidia persistenced"
-echo "Os serviços de suspend/hibernate/resume já são habilitados pelo %post do nvidia-driver"
+# Nvidia (persistenced; suspend/hibernate/resume habilitados pelo %post do driver)
 systemctl enable nvidia-persistenced.service || true
 
-echo "Limpeza de resíduos de construção" 
-rm -rvf pacotes_rpm 
+# Workaround bootc: mascarar remount-fs
+systemctl mask systemd-remount-fs.service
+
+# ┌─────────────────────────────────────────┐
+# │  Limpeza                                │
+# └─────────────────────────────────────────┘
+rm -rvf pacotes_rpm
 dnf5 clean all
 EOR
 
-# Instala fontes locais (Google Sans + Nerd Fonts Symbols Only)
+# ----------------------------------------------------------------------------
+# 2.4 — Fontes locais (Google Sans + Nerd Fonts Symbols Only)
+# ----------------------------------------------------------------------------
 COPY fonts/google-sans/ /usr/share/fonts/google-sans/
 COPY fonts/nerd-fonts/ /usr/share/fonts/nerd-fonts-symbols/
 RUN fc-cache -fv
 
-# Verificar por erros na imagem 
+# ----------------------------------------------------------------------------
+# 2.5 — Validação final da imagem
+# ----------------------------------------------------------------------------
 RUN bootc container lint

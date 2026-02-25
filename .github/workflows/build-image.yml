@@ -1,14 +1,11 @@
-name: Build e Push da Imagem Bootc
+name: Bootc Plasma Minimal — Build + ISO
 
 on:
   schedule:
-    # Dispara as 03h45 diariamente (horário de Brasília)
-    - cron: "45 6 * * *"
+    - cron: "0 9 * * *"
   push:
-    branches:
-      - main
-    paths-ignore:
-      - "README.md"
+    branches: [main]
+    paths-ignore: ["README.md"]
   workflow_dispatch:
 
 env:
@@ -22,52 +19,40 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_tag: ${{ steps.full_image.outputs.tag }}
-      base_version: ${{ steps.base_version.outputs.version }}
-      timestamp: ${{ steps.timestamp.outputs.date }}
+      image_tag: ${{ steps.vars.outputs.tag }}
+      version: ${{ steps.vars.outputs.version }}
+      timestamp: ${{ steps.vars.outputs.timestamp }}
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Extrair Versão da Imagem Base
-        id: base_version
-        run: |
-          VERSION=$(grep '^FROM' Containerfile | head -n 1 | awk -F: '{print $2}' | awk '{print $1}')
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login no GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Gerar Timestamp (Horário de Brasília)
-        id: timestamp
-        run: echo "date=$(TZ='America/Sao_Paulo' date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+      - id: vars
+        run: |
+          VERSION=$(grep '^FROM' Containerfile | head -1 | awk -F: '{print $2}' | awk '{print $1}')
+          TIMESTAMP=$(TZ='America/Fortaleza' date +'%Y%m%d-%H%M')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "tag=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}-latest" >> $GITHUB_OUTPUT
 
-      - name: Tag completa da imagem
-        id: full_image
-        run: echo "tag=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.base_version.outputs.version }}-latest" >> $GITHUB_OUTPUT
-
-      - name: Extrair metadados
+      - uses: docker/metadata-action@v5
         id: meta
-        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.base_version.outputs.version }}-${{ steps.timestamp.outputs.date }}
-            type=raw,value=${{ steps.base_version.outputs.version }}-latest
+            type=raw,value=${{ steps.vars.outputs.version }}-${{ steps.vars.outputs.timestamp }}
+            type=raw,value=${{ steps.vars.outputs.version }}-latest
             type=ref,event=branch
             type=sha,format=short
             latest
 
-      - name: Build e Push da Imagem (Rebuild Completo)
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Containerfile
@@ -85,96 +70,46 @@ jobs:
       packages: read
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Liberar espaço em disco
-        run: |
-          echo "Espaço antes:"
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-            /usr/local/share/boost /usr/share/swift /usr/local/.ghcup \
-            /opt/hostedtoolcache
+      - run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
           sudo docker image prune -af 2>/dev/null || true
-          echo "Espaço depois:"
-          df -h /
 
-      - name: Login no GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Puxar imagem do registry
-        run: |
+      - run: |
           sudo podman pull ${{ needs.build-and-push.outputs.image_tag }}
-
-      - name: Gerar ISO com bootc-image-builder
-        run: |
           mkdir -p output
-          sudo podman run \
-            --rm --privileged \
-            -v ./config.toml:/config.toml:ro \
+          sudo podman run --rm --privileged \
+            -v ./iso/config.toml:/config.toml:ro \
             -v ./output:/output \
             -v /var/lib/containers/storage:/var/lib/containers/storage \
             quay.io/centos-bootc/bootc-image-builder:latest \
-            --type anaconda-iso \
-            --rootfs btrfs \
+            --type anaconda-iso --rootfs btrfs \
             ${{ needs.build-and-push.outputs.image_tag }}
 
-      - name: Gerar checksum e dividir ISO
-        id: split
-        run: |
-          ISO_PATH="output/bootiso/install.iso"
-          ISO_SIZE=$(stat -c%s "$ISO_PATH")
-          echo "Tamanho da ISO: $(numfmt --to=iec $ISO_SIZE)"
-
-          # Checksum da ISO original
-          sha256sum "$ISO_PATH" > output/SHA256SUMS.txt
-          cat output/SHA256SUMS.txt
-
-          # Divide em partes de 1.9GB
+      - run: |
+          sha256sum output/bootiso/install.iso > output/SHA256SUMS.txt
           mkdir -p output/parts
-          split -b 1900M -d --additional-suffix=.part "$ISO_PATH" output/parts/install.iso.
+          split -b 1900M -d --additional-suffix=.part output/bootiso/install.iso output/parts/install.iso.
 
-          # Lista as partes geradas
-          PART_COUNT=$(ls output/parts/ | wc -l)
-          echo "Partes geradas: $PART_COUNT"
-          ls -lh output/parts/
-          echo "part_count=$PART_COUNT" >> $GITHUB_OUTPUT
-
-      - name: Criar Release no GitHub
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
-          tag_name: iso-${{ needs.build-and-push.outputs.base_version }}-${{ needs.build-and-push.outputs.timestamp }}
-          name: "🖥️ ISO Fedora ${{ needs.build-and-push.outputs.base_version }} — ${{ needs.build-and-push.outputs.timestamp }}"
+          tag_name: iso-${{ needs.build-and-push.outputs.version }}-${{ needs.build-and-push.outputs.timestamp }}
+          name: "💿 Bootc Plasma Minimal — Fedora ${{ needs.build-and-push.outputs.version }} (${{ needs.build-and-push.outputs.timestamp }})"
           body: |
-            ## 📀 ISO de Instalação — Fedora Bootc KDE Plasma Minimal
-
             **Kernel:** CachyOS | **Desktop:** KDE Plasma 6 | **Nvidia:** Integrado
 
-            ### 📥 Como baixar e montar a ISO
-
-            Baixe **todas** as partes `.part` e o `SHA256SUMS.txt`, depois:
-
             ```bash
-            # Remontar a ISO
             cat install.iso.*.part > install.iso
-
-            # Verificar integridade
             sha256sum -c SHA256SUMS.txt
-            ```
-
-            ### 🔥 Gravar no pendrive
-            ```bash
             sudo dd if=install.iso of=/dev/sdX bs=4M status=progress oflag=sync
             ```
-
-            > ⚠️ Substitua `/dev/sdX` pelo dispositivo correto do pendrive!
-
-            ---
-            Imagem container: `${{ needs.build-and-push.outputs.image_tag }}`
           files: |
             output/parts/*
             output/SHA256SUMS.txt

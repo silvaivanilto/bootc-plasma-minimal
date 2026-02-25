@@ -1,145 +1,132 @@
-# Grupos
-@base-x
-@networkmanager-submodules
-@fonts
-@hardware-support
-@libreoffice
+# ╔══════════════════════════════════════════╗
+# ║  Pacotes RPM — Fedora Bootc KDE Plasma   ║
+# ╚══════════════════════════════════════════╝
 
-# KDE Plasma Core
-kwin
-plasma-breeze
-plasma-desktop
-plasma-desktop-doc
-plasma-workspace
-plasma-workspace-wallpapers
-plasma-login-manager
-kcm-plasmalogin
+# ── Grupos base ──────────────────────────────
+@base-x                          # Xorg/Wayland, mesa, input drivers
+@fonts                           # Noto, Liberation, emoji, CJK
+@hardware-support                # Firmware (WiFi, Bluetooth, etc.)
+@networkmanager-submodules       # WiFi, Ethernet, mobile broadband
 
-# KDE Módulos e Addons
-bluedevil
-breeze-icon-theme
-colord-kde
-kde-gtk-config
-kdeplasma-addons
-kinfocenter
-kscreen
-kscreenlocker
-plasma-disks
-plasma-drkonqi
-plasma-firewall
-plasma-pa
-plasma-print-manager
-plasma-systemmonitor
-plasma-thunderbolt
-plasma-vault
-plasma-welcome
-polkit-kde
-powerdevil
-xdg-desktop-portal-kde
+# ── KDE Plasma ───────────────────────────────
+# Core
+kwin                             # Compositor e gerenciador de janelas
+plasma-breeze                    # Tema visual padrão do Plasma
+plasma-desktop                   # Desktop base do KDE Plasma
+plasma-login-manager             # Tela de login (SDDM substituto)
+plasma-workspace                 # Espaço de trabalho (painel, systray)
+plasma-workspace-wallpapers      # Papéis de parede oficiais
+kcm-plasmalogin                  # Configurações do login manager
 
-# KDE Rede
-kde-connect
-kdenetwork-filesharing
-kdnssd
-plasma-nm
-plasma-nm-l2tp
-plasma-nm-openconnect
-plasma-nm-openswan
-plasma-nm-openvpn
-plasma-nm-pptp
-plasma-nm-vpnc
-NetworkManager-config-connectivity-fedora
+# Módulos do sistema
+bluedevil                        # Gerenciamento Bluetooth
+colord-kde                       # Calibração de cores do monitor
+kde-gtk-config                   # Tema GTK integrado ao KDE
+kdeplasma-addons                 # Widgets extras (clima, notas, etc.)
+kinfocenter                      # Informações de hardware/sistema
+kscreen                          # Configuração de telas e resolução
+plasma-disks                     # Monitoramento SMART de discos
+plasma-firewall                  # Interface gráfica para firewalld
+plasma-pa                        # Controle de volume (PulseAudio/PipeWire)
+plasma-print-manager             # Configuração de impressoras
+plasma-systemmonitor             # Monitor de CPU, RAM, disco, rede
+powerdevil                       # Gerenciamento de energia e brilho
+xdg-desktop-portal-kde           # Portais XDG (screenshots, file picker)
 
-# KDE Apps
-akonadi-server
-ark
-dolphin
-elisa-player
-haruna
-kalk
-kcharselect
-kde-partitionmanager
-kdialog
-kfind
-kio-admin
-kmenuedit
-koko
-konsole
-ksshaskpass
-kwalletmanager5
-kwrite
-okular
-plasma-discover
-skanpage
-spectacle
+# ── KDE Apps ─────────────────────────────────
+ark                              # Compactador/descompactador de arquivos
+dolphin                          # Gerenciador de arquivos
+elisa-player                     # Player de música
+haruna                           # Player de vídeo (baseado em mpv)
+kalk                             # Calculadora
+kcharselect                      # Tabela de caracteres Unicode
+kde-partitionmanager             # Gerenciador de partições
+kdialog                          # Diálogos nativos para scripts shell
+kfind                            # Busca avançada de arquivos
+kio-admin                        # Abre arquivos/pastas como root
+kmenuedit                        # Editor do menu de aplicativos
+koko                             # Galeria de fotos e imagens
+konsole                          # Emulador de terminal
+ksshaskpass                      # Agente SSH via KWallet
+kwalletmanager5                  # Gerenciador de senhas KWallet
+kwrite                           # Editor de texto simples
+okular                           # Leitor de PDF e documentos
+plasma-discover                  # Loja de apps (Flatpak, RPM)
+skanpage                         # Digitalização (scanner)
+spectacle                        # Captura de tela e gravação
 
-# Codecs e Multimídia
-ffmpeg
-ffmpegthumbs
-gstreamer1-plugin-libav
-gstreamer1-plugins-bad-free-extras
-gstreamer1-plugins-bad-freeworld
-gstreamer1-plugins-ugly
-lame
-phonon-qt6-backend-vlc
+# ── Rede ─────────────────────────────────────
+kde-connect                      # Integração com celular Android/iOS
+kdenetwork-filesharing           # Compartilhamento Samba na rede local
+plasma-nm                        # Applet de rede (WiFi, Ethernet)
+NetworkManager-config-connectivity-fedora  # Detecção de portal captivo
 
-# Sistema e Utilitários
-bash-completion
-cups-pk-helper
-curl
-git
-kcm_systemd
-kf6-baloo-file
-kf6-kio-doc
-kdegraphics-thumbnailers
-libappindicator-gtk3
-pam-kwallet
-pinentry-qt
-qt6-qtbase-gui
-qt6-qtdeclarative
-qt6-qtwayland
-udisks2
-switcheroo-control
-xdg-user-dirs-gtk
-xwaylandvideobridge
+# ── Codecs e Multimídia ──────────────────────
+ffmpeg                           # Decodificador universal de áudio/vídeo
+ffmpegthumbs                     # Miniaturas de vídeo no Dolphin
+gstreamer1-plugin-libav          # Backend libav para GStreamer
+gstreamer1-plugins-bad-free-extras  # Codecs extras livres
+gstreamer1-plugins-bad-freeworld # H.264, H.265, AAC (não-livres)
+gstreamer1-plugins-ugly          # MP3, MPEG (patentes expiradas)
+lame                             # Codificador MP3
+phonon-qt6-backend-vlc           # Backend de áudio VLC para KDE
 
-# Energia
-tlp
-tlp-pd
-tlp-rdw
+# ── Navegador ────────────────────────────────
+google-chrome-stable             # Navegador Google Chrome
+plasma-browser-integration       # Integração Chrome ↔ KDE (mídia, downloads)
 
-# Navegador
-google-chrome-stable
+# ── Office ───────────────────────────────────
+@libreoffice                     # Suite office completa (Writer, Calc, Impress)
 
-# Containers
-flatpak
-podman
-distrobox
+# ── Containers ───────────────────────────────
+distrobox                        # Containers com integração desktop
+flatpak                          # Apps isolados (sandboxed)
+podman                           # Containers OCI (alternativa ao Docker)
 
-# Localização
-langpacks-core-pt_BR
-langpacks-pt_BR
-langpacks-fonts-pt
+# ── Sistema e Utilitários ────────────────────
+bash-completion                  # Autocompletar comandos no terminal
+cups-pk-helper                   # Impressão via PolicyKit
+curl                             # Transferências HTTP/FTP
+fzf                              # Busca fuzzy no terminal (Ctrl+R)
+git                              # Controle de versão
+ibus                             # Input method (emoji picker, acentos)
+kcm_systemd                      # Gerenciador de serviços systemd no KDE
+kde-inotify-survey               # Alerta quando limite inotify está baixo
+kf6-baloo-file                   # Indexador de arquivos (busca no Dolphin/KRunner)
+kdegraphics-thumbnailers         # Miniaturas de imagens no Dolphin
+libappindicator-gtk3             # Ícones na bandeja do sistema (Chrome)
+pam-kwallet                      # Desbloqueio automático do KWallet no login
+pinentry-qt                      # Diálogo para GPG/SSH no KDE
+switcheroo-control               # Seleção de GPU (AMD integrada / Nvidia dedicada)
+xdg-user-dirs-gtk                # Cria pastas padrão (Downloads, Documentos, etc.)
+xwaylandvideobridge              # Compartilhamento de tela no Wayland
 
-# Fontes (substitutos Microsoft + Nerd Fonts)
-google-arimo-fonts
-google-crosextra-caladea-fonts
-google-carlito-fonts
-comic-neue-fonts
-google-cousine-fonts
-google-tinos-fonts
+# ── Energia ──────────────────────────────────
+tlp                              # Gerenciamento avançado de energia
+tlp-pd                           # Daemon de processador (performance/economy)
+tlp-rdw                          # Radio Device Wizard (WiFi/Bluetooth on/off)
 
-# Nvidia (libs)
-libva-nvidia-driver
-libnvidia-cfg
-libnvidia-gpucomp
-libnvidia-ml
-nvidia-driver-cuda-libs
-nvidia-driver-libs
-nvidia-gpu-firmware
-nvidia-modprobe
-nvidia-persistenced
+# ── Localização ──────────────────────────────
+langpacks-core-pt_BR             # Pacote base de idioma pt_BR
+langpacks-pt_BR                  # Traduções completas pt_BR
+langpacks-fonts-pt               # Fontes para português
 
-# sched_ext (CachyOS)
-scx-scheds
-scx-tools
+# ── Drivers GPU ──────────────────────────────
+# AMD (GPU integrada)
+mesa-va-drivers                  # VA-API — decodificação de vídeo por hardware
+mesa-vulkan-drivers              # Vulkan — jogos e renderização 3D
+
+# Nvidia (GPU dedicada — via Negativo17)
+libnvidia-cfg                    # Configuração da GPU Nvidia
+libnvidia-gpucomp                # Computação GPU (OpenCL/CUDA)
+libnvidia-ml                     # Monitoramento da GPU (nvidia-smi)
+libva-nvidia-driver              # VA-API para Nvidia (vídeo por hardware)
+nvidia-driver-cuda-libs          # Bibliotecas CUDA runtime
+nvidia-driver-libs               # Bibliotecas OpenGL/Vulkan Nvidia
+nvidia-gpu-firmware              # Firmware da GPU Nvidia
+nvidia-modprobe                  # Carregamento automático do módulo
+nvidia-persistenced              # Daemon de persistência da GPU
+
+# ── Scheduler (CachyOS) ─────────────────────
+scx-scheds                       # Schedulers sched_ext (LAVD, Rusty, etc.)
+scx-tools                        # Ferramentas de monitoramento scx
