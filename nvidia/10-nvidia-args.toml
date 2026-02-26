@@ -3,5 +3,4 @@ kargs = [
   "modprobe.blacklist=nouveau,nova_core",
   "nvidia-drm.modeset=1",
   "nvidia.NVreg_PreserveVideoMemoryAllocations=1",
-  "vconsole.keymap=br"
 ]

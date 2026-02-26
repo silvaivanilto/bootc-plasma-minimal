@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Dual Boot Windows
+Name[pt_BR]=Dual Boot Windows
+Comment=Adicionar Windows ao menu GRUB
+Comment[pt_BR]=Adicionar Windows ao menu GRUB
+Exec=/usr/local/bin/dualboot-windows
+Icon=yast-kernel
+Type=Application
+Categories=System;Settings;
+Keywords=grub;windows;dual;boot;

@@ -1,15 +1,11 @@
-# ╔══════════════════════════════════════════╗
-# ║  Pacotes RPM — Fedora Bootc KDE Plasma   ║
-# ╚══════════════════════════════════════════╝
+# Pacotes RPM — Bootc Plasma Minimal
 
-# ── Grupos base ──────────────────────────────
+# --- Grupos base ---
 @base-x                          # Xorg/Wayland, mesa, input drivers
-@fonts                           # Noto, Liberation, emoji, CJK
 @hardware-support                # Firmware (WiFi, Bluetooth, etc.)
 @networkmanager-submodules       # WiFi, Ethernet, mobile broadband
 
-# ── KDE Plasma ───────────────────────────────
-# Core
+# --- KDE Plasma (Core) ---
 kwin                             # Compositor e gerenciador de janelas
 plasma-breeze                    # Tema visual padrão do Plasma
 plasma-desktop                   # Desktop base do KDE Plasma
@@ -18,11 +14,10 @@ plasma-workspace                 # Espaço de trabalho (painel, systray)
 plasma-workspace-wallpapers      # Papéis de parede oficiais
 kcm-plasmalogin                  # Configurações do login manager
 
-# Módulos do sistema
+# --- KDE Plasma (Módulos) ---
 bluedevil                        # Gerenciamento Bluetooth
 colord-kde                       # Calibração de cores do monitor
 kde-gtk-config                   # Tema GTK integrado ao KDE
-kdeplasma-addons                 # Widgets extras (clima, notas, etc.)
 kinfocenter                      # Informações de hardware/sistema
 kscreen                          # Configuração de telas e resolução
 plasma-disks                     # Monitoramento SMART de discos
@@ -33,7 +28,7 @@ plasma-systemmonitor             # Monitor de CPU, RAM, disco, rede
 powerdevil                       # Gerenciamento de energia e brilho
 xdg-desktop-portal-kde           # Portais XDG (screenshots, file picker)
 
-# ── KDE Apps ─────────────────────────────────
+# --- KDE Apps ---
 ark                              # Compactador/descompactador de arquivos
 dolphin                          # Gerenciador de arquivos
 elisa-player                     # Player de música
@@ -52,16 +47,17 @@ kwalletmanager5                  # Gerenciador de senhas KWallet
 kwrite                           # Editor de texto simples
 okular                           # Leitor de PDF e documentos
 plasma-discover                  # Loja de apps (Flatpak, RPM)
+plasma-discover-flatpak          # Backend Flatpak para o Discover
 skanpage                         # Digitalização (scanner)
 spectacle                        # Captura de tela e gravação
 
-# ── Rede ─────────────────────────────────────
+# --- Rede ---
 kde-connect                      # Integração com celular Android/iOS
 kdenetwork-filesharing           # Compartilhamento Samba na rede local
 plasma-nm                        # Applet de rede (WiFi, Ethernet)
 NetworkManager-config-connectivity-fedora  # Detecção de portal captivo
 
-# ── Codecs e Multimídia ──────────────────────
+# --- Codecs e Multimídia ---
 ffmpeg                           # Decodificador universal de áudio/vídeo
 ffmpegthumbs                     # Miniaturas de vídeo no Dolphin
 gstreamer1-plugin-libav          # Backend libav para GStreamer
@@ -71,19 +67,29 @@ gstreamer1-plugins-ugly          # MP3, MPEG (patentes expiradas)
 lame                             # Codificador MP3
 phonon-qt6-backend-vlc           # Backend de áudio VLC para KDE
 
-# ── Navegador ────────────────────────────────
+# --- Navegador ---
 google-chrome-stable             # Navegador Google Chrome
 plasma-browser-integration       # Integração Chrome ↔ KDE (mídia, downloads)
 
-# ── Office ───────────────────────────────────
-@libreoffice                     # Suite office completa (Writer, Calc, Impress)
+# --- Office ---
+libreoffice-calc                 # Planilhas
+libreoffice-draw                 # Desenho vetorial
+libreoffice-impress              # Apresentações
+libreoffice-math                 # Editor de fórmulas
+libreoffice-writer               # Editor de texto
+autocorr-pt                      # Autocorreção português
+libreoffice-filters              # Filtros de importação/exportação
+libreoffice-kf6                  # Integração visual nativa com KDE Plasma
+libreoffice-langpack-pt-BR       # Tradução pt_BR
+libreoffice-opensymbol-fonts     # Fonte de símbolos matemáticos
+libreoffice-pdfimport            # Importação de PDFs
 
-# ── Containers ───────────────────────────────
+# --- Containers ---
 distrobox                        # Containers com integração desktop
 flatpak                          # Apps isolados (sandboxed)
 podman                           # Containers OCI (alternativa ao Docker)
 
-# ── Sistema e Utilitários ────────────────────
+# --- Sistema e Utilitários ---
 bash-completion                  # Autocompletar comandos no terminal
 cups-pk-helper                   # Impressão via PolicyKit
 curl                             # Transferências HTTP/FTP
@@ -95,28 +101,38 @@ kde-inotify-survey               # Alerta quando limite inotify está baixo
 kf6-baloo-file                   # Indexador de arquivos (busca no Dolphin/KRunner)
 kdegraphics-thumbnailers         # Miniaturas de imagens no Dolphin
 libappindicator-gtk3             # Ícones na bandeja do sistema (Chrome)
+os-prober                        # Detecção de outros SO (dual-boot)
 pam-kwallet                      # Desbloqueio automático do KWallet no login
 pinentry-qt                      # Diálogo para GPG/SSH no KDE
 switcheroo-control               # Seleção de GPU (AMD integrada / Nvidia dedicada)
 xdg-user-dirs-gtk                # Cria pastas padrão (Downloads, Documentos, etc.)
 xwaylandvideobridge              # Compartilhamento de tela no Wayland
 
-# ── Energia ──────────────────────────────────
+# --- Energia ---
 tlp                              # Gerenciamento avançado de energia
 tlp-pd                           # Daemon de processador (performance/economy)
 tlp-rdw                          # Radio Device Wizard (WiFi/Bluetooth on/off)
 
-# ── Localização ──────────────────────────────
+# --- Localização ---
 langpacks-core-pt_BR             # Pacote base de idioma pt_BR
 langpacks-pt_BR                  # Traduções completas pt_BR
 langpacks-fonts-pt               # Fontes para português
 
-# ── Drivers GPU ──────────────────────────────
-# AMD (GPU integrada)
+# --- Fontes (Google Noto) ---
+google-noto-sans-vf-fonts        # Sans (variable, multiweight)
+google-noto-serif-vf-fonts       # Serif (variable, multiweight)
+google-noto-sans-mono-vf-fonts   # Monospace (terminal, código)
+google-noto-color-emoji-fonts    # Emoji colorido
+google-noto-sans-math-fonts      # Símbolos matemáticos
+google-noto-sans-symbols-vf-fonts   # Símbolos (setas, formas, etc.)
+google-noto-sans-symbols2-vf-fonts  # Mais símbolos (braille, dados, etc.)
+google-noto-sans-cjk-vf-fonts   # Chinês, Japonês e Coreano
+
+# --- Drivers GPU (AMD) ---
 mesa-va-drivers                  # VA-API — decodificação de vídeo por hardware
 mesa-vulkan-drivers              # Vulkan — jogos e renderização 3D
 
-# Nvidia (GPU dedicada — via Negativo17)
+# --- Drivers GPU (Nvidia via Negativo17) ---
 libnvidia-cfg                    # Configuração da GPU Nvidia
 libnvidia-gpucomp                # Computação GPU (OpenCL/CUDA)
 libnvidia-ml                     # Monitoramento da GPU (nvidia-smi)
@@ -127,6 +143,8 @@ nvidia-gpu-firmware              # Firmware da GPU Nvidia
 nvidia-modprobe                  # Carregamento automático do módulo
 nvidia-persistenced              # Daemon de persistência da GPU
 
-# ── Scheduler (CachyOS) ─────────────────────
+# --- Scheduler e Otimização (CachyOS) ---
 scx-scheds                       # Schedulers sched_ext (LAVD, Rusty, etc.)
 scx-tools                        # Ferramentas de monitoramento scx
+scx-manager                      # GUI para trocar schedulers
+ananicy-cpp                      # Auto-nice daemon (prioridade de processos)

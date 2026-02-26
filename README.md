@@ -25,7 +25,10 @@ Sistema operacional **imutável** baseado em Fedora 43 Bootc com KDE Plasma 6, k
 | 🔋 | **TLP** | Gerenciamento de energia com integração Nvidia |
 | 🔀 | **GPU Híbrida** | switcheroo-control (AMD iGPU + Nvidia dGPU) |
 | 🌐 | **Google Chrome** | Navegador pré-instalado |
-| 📝 | **LibreOffice** | Suite office completa |
+| 📝 | **LibreOffice** | Suite office com integração KDE (kf6) |
+| 📦 | **Flatpak + Discover** | Loja de apps com backend Flatpak |
+| 🔧 | **CachyOS Addons** | sched_ext, ZRAM, ananicy-cpp |
+| 🪟 | **Dual Boot** | Ferramenta gráfica para adicionar Windows ao GRUB |
 | 🇧🇷 | **pt_BR** | Localização completa (idioma, teclado, langpacks) |
 
 ---
@@ -82,14 +85,17 @@ sudo bootc switch ghcr.io/silvaivanilto/bootc-plasma-minimal:latest
 ├── Containerfile              # Build multi-stage (CachyOS + Nvidia + KDE)
 ├── config/
 │   ├── locale.conf            # Localização pt_BR.UTF-8
-│   └── vconsole.conf          # Teclado ABNT2 para TTY
+│   ├── vconsole.conf          # Teclado ABNT2 para TTY
+│   ├── 99-google-sans.conf    # Fontconfig (substituições MS Office)
+│   ├── dualboot-windows.sh    # Ferramenta dual-boot (kdialog)
+│   └── dualboot-windows.desktop
 ├── nvidia/
 │   ├── 10-nvidia-args.toml    # Kernel args (blacklist nouveau, modeset)
 │   └── nvidia-power-management.conf
 ├── packages/
 │   └── pacotes_rpm            # Lista de pacotes RPM por categoria
 ├── fonts/
-│   ├── google-sans/           # Google Sans Flex (variable font)
+│   ├── google-fonts/          # Google Sans, Arimo, Tinos, Carlito, etc.
 │   └── nerd-fonts/            # Nerd Fonts Symbols Only
 ├── iso/
 │   └── config.toml            # Kickstart Anaconda (Btrfs + subvolumes)
